@@ -13,10 +13,7 @@ class Node extends Component {
 	constructor(props) {
 		super(props);
 		this.state = {
-			inputValue: '',
-			isShowInput: false,
-			isAdd: false,
-			hasBackValue: true
+			inputValue: ''
 		};
 	}
 
@@ -41,17 +38,9 @@ class Node extends Component {
 		this.context.onFoldNodeAction(this.context.treeData, node);
 	};
 
-	// 显示Input输入框
-	showInput = (name, node) => {
-		// 新增子节点时才需要展开父节点
-		if (!name) {
-			// eslint-disable-next-line no-param-reassign
-			node.isUnfold = true;
-		}
+	setInputValue = name => {
 		this.setState({
-			inputValue: name || '',
-			isShowInput: true,
-			isAdd: !name
+			inputValue: name || ''
 		});
 	};
 
@@ -73,31 +62,28 @@ class Node extends Component {
 		if (isRepeat) {
 			return;
 		}
+
 		this.setState({
-			isShowInput: false,
-			isAdd: false,
 			inputValue: ''
 		});
 
 		// 编辑与新增
-		this.context[!this.state.isAdd ? 'onRenameAction' : 'onAddAction'](id, name, level);
+		this.context[!data.isAdd ? 'onRenameAction' : 'onAddAction'](id, name, level);
+
+		this.context.onReRenderNode({ currentNode: data });
 	};
 
 	// 取消保存
-	onClickCancel = () => {
+	onClickCancel = data => {
 		this.setState({
-			isShowInput: false,
-			isAdd: false,
 			inputValue: ''
 		});
+		this.context.onReRenderNode({ currentNode: data });
 	};
 
 	// 选中节点
 	handleSelect = checked => {
 		const { data } = this.props;
-		this.setState({
-			hasBackValue: false
-		});
 		if (this.context.supportCheckbox) {
 			data.checked = checked;
 		}
@@ -106,52 +92,54 @@ class Node extends Component {
 
 	render() {
 		const { data, children, prefixCls } = this.props;
-		const { showInput, onSaveClick, onClickCancel } = this;
+		const { setInputValue, onSaveClick, onClickCancel } = this;
 		// 将三个方法传递出去可以供外部调用
-		const options = { showInput, onSaveClick, onClickCancel };
+		const options = { setInputValue, onSaveClick, onClickCancel };
+		const paddingLeft = 16 * data.level;
 		return (
 			<Fragment>
-				<div className={classNames(`${prefixCls}-list-node-area ${data.children && data.children.length > 0 ? 'has-child-style' : null}`)}>
-					{/* 折叠展开icon */}
-					<ToggleFold hasChildren={data.children.length > 0} showChildrenItem={data.isUnfold} toggle={() => this.toggle(data)} />
+				<div className={classNames(`${prefixCls}-list-node-area ${data.children && !data.children.length ? 'child-style' : null}`)}>
 					<div
-						className={`node-item ${this.state.isShowInput && !this.state.isAdd ? 'hide-node' : null} ${data.isActive ? 'is-active' : null}`}
-						onContextMenu={e => this.onHandleContextMenu(e, data, options)}>
-						{/* 节点前面的icon */}
-						<NodeIcon
-							showIcon={this.context.showIcon}
-							openIconType={this.context.openIconType}
-							closeIconType={this.context.closeIconType}
-							iconColor={this.context.iconColor}
-							hasChildren={data.children.length > 0}
-							showChildrenItem={data.isUnfold}
-						/>
+						style={{ minWidth: `calc(100% - ${paddingLeft}px)`, paddingLeft }}
+						className={`node-item-container ${data.isActive ? 'is-active' : null} ${this.context.supportCheckbox ? 'support-checkbox' : ''}`}>
+						{/* 折叠展开icon */}
+						<ToggleFold hasChildren={data.children.length > 0} showChildrenItem={data.isUnfold} toggle={() => this.toggle(data)} />
+						<div
+							className={`node-item ${data.isEdit && !data.isAdd ? 'hide-node' : null}`}
+							onContextMenu={e => this.onHandleContextMenu(e, data, options)}>
+							{/* 节点前面的icon */}
+							<NodeIcon
+								showIcon={this.context.showIcon}
+								openIconType={this.context.openIconType}
+								closeIconType={this.context.closeIconType}
+								iconColor={this.context.iconColor}
+								hasChildren={data.children.length > 0}
+								showChildrenItem={data.isUnfold}
+							/>
 
-						{/* checkbox选择，新增或编辑时不显示 */}
-						<ShowSelection
-							id={data.id}
-							name={data.name}
-							disableSelected={data.disableSelected}
-							searchText={this.context.searchText}
-							indeterminate={data.indeterminate}
-							checked={data.checked}
-							hasBackValue={this.state.hasBackValue}
-							backValue={this.context.selectedValue}
-							supportCheckbox={this.context.supportCheckbox}
-							onHandleSelect={this.handleSelect}
+							{/* checkbox选择，新增或编辑时不显示 */}
+							<ShowSelection
+								id={data.id}
+								name={data.name}
+								disableSelected={data.disableSelected}
+								searchText={this.context.searchText}
+								indeterminate={data.indeterminate}
+								checked={data.checked}
+								supportCheckbox={this.context.supportCheckbox}
+								onHandleSelect={this.handleSelect}
+							/>
+						</div>
+
+						<ShowInput
+							isEdit={data.isEdit}
+							isAdd={data.isAdd}
+							inputValue={this.state.inputValue}
+							maxLength={this.context.nodeNameMaxLength}
+							handleInputChange={this.handleInputChange}
+							saveItem={() => this.onSaveClick(data, this.state.inputValue)}
+							cancelSave={() => this.onClickCancel(data)}
 						/>
 					</div>
-
-					<ShowInput
-						isShow={this.state.isShowInput}
-						isAdd={this.state.isAdd}
-						inputValue={this.state.inputValue}
-						maxLength={this.context.nodeNameMaxLength}
-						handleInputChange={this.handleInputChange}
-						saveItem={() => this.onSaveClick(data, this.state.inputValue)}
-						cancelSave={this.onClickCancel}
-					/>
-
 					{data.isUnfold && <ul>{children}</ul>}
 				</div>
 			</Fragment>
@@ -174,39 +162,37 @@ function ToggleFold({ hasChildren, showChildrenItem, toggle }) {
 
 /**
  * 显示输入框
- * @param showInput
+ * @param isEdit
+ * @param isAdd
+ * @param maxLength
  * @param inputValue
  * @param handleInputChange
  * @param saveItem
  * @param cancelSave
- * @returns {null|*}
+ * @returns {*}
  * @constructor
  */
-function ShowInput({ isShow, isAdd, maxLength, inputValue, handleInputChange, saveItem, cancelSave }) {
-	return (
-		(isShow || isAdd) && (
-			<div className={!isAdd ? 'is-rename' : 'is-add'}>
-				<Input
-					className="node-input"
-					value={inputValue}
-					onChange={handleInputChange}
-					autoFocus
-					onEnter={saveItem}
-					maxLength={maxLength}
-					placeholder={`最多可输入${maxLength}个字符`}
-				/>
-				<Icon type="finish" className="save-icon" onClick={saveItem} />
-				<Icon type="close" className="cancel-icon" onClick={cancelSave} />
-			</div>
-		)
-	);
+function ShowInput({ isEdit, isAdd, maxLength, inputValue, handleInputChange, saveItem, cancelSave }) {
+	return isEdit || isAdd ? (
+		<div className={!isAdd ? 'is-rename' : 'is-add'}>
+			<Input
+				className="node-input"
+				value={inputValue}
+				onChange={handleInputChange}
+				autoFocus
+				onEnter={saveItem}
+				maxLength={maxLength}
+				placeholder={`最多可输入${maxLength}个字符`}
+			/>
+			<Icon type="finish" className="save-icon" onClick={saveItem} />
+			<Icon type="close" className="cancel-icon" onClick={cancelSave} />
+		</div>
+	) : null;
 }
 
 /**
  * 显示复选框
  * @param searchText
- * @param backValue
- * @param hasBackValue
  * @param indeterminate
  * @param checked
  * @param supportCheckbox
@@ -214,20 +200,16 @@ function ShowInput({ isShow, isAdd, maxLength, inputValue, handleInputChange, sa
  * @param name
  * @param disableSelected
  * @param onHandleSelect
- * @returns {null|*}
+ * @returns {*}
  * @constructor
  */
-function ShowSelection({ searchText, backValue, hasBackValue, indeterminate, checked, supportCheckbox, id, name, disableSelected, onHandleSelect }) {
+function ShowSelection({ searchText, indeterminate, checked, supportCheckbox, id, name, disableSelected, onHandleSelect }) {
 	// 处理搜索关键字高亮
 	const re = new RegExp(`(${searchText.replace(/[(){}.+*?^$|\\[\]]/g, '\\$&')})`, 'ig');
 	const tmp = name.replace(re, `<span class="hot-text">${searchText}</span>`);
 	const labelWidth = {
 		width: '100%',
 		zIndex: 0
-	};
-
-	const backStyle = {
-		color: '#08F'
 	};
 
 	// 多选类型展示
@@ -239,14 +221,7 @@ function ShowSelection({ searchText, backValue, hasBackValue, indeterminate, che
 		);
 	}
 
-	return (
-		<span
-			style={backValue.length === 1 && hasBackValue && backValue[0].id === id ? backStyle : null}
-			className="node-name"
-			dangerouslySetInnerHTML={{ __html: tmp }}
-			onClick={onHandleSelect}
-		/>
-	);
+	return <span className="node-name" dangerouslySetInnerHTML={{ __html: tmp }} onClick={onHandleSelect} />;
 }
 
 /**
