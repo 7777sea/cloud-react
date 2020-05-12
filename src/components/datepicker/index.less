@@ -1,7 +1,6 @@
 @import '../style/index';
 
 @selector: ~'@{prefix}-datepicker';
-@range: ~'@{prefix}-rangepicker';
 @time: ~'@{prefix}-timepicker';
 
 @placeholder: #c9c9c9;
@@ -18,9 +17,8 @@
 @grid-day-check-bgcolor: #e5f7ff;
 @grid-day-other-color: #ccc;
 
-@range-split-color: #979797;
-
 .@{selector}-container {
+	position: relative;
 	cursor: pointer;
 	display: inline-block;
 }
@@ -240,6 +238,11 @@
 			width: 42px;
 			height: 25px;
 			text-align: center;
+			outline: none;
+			color: @color-gray4;
+			&::placeholder {
+				color: #c9c9c9;
+			}
 		}
 
 		.colon {
@@ -265,45 +268,6 @@
 
 	.hide {
 		display: none;
-	}
-}
-
-.@{range} {
-	display: inline-block;
-	width: 490px;
-	border: 1px solid @color-gray6;
-	box-sizing: border-box;
-
-	> * {
-		vertical-align: middle;
-	}
-	.cloud-datepicker-inp {
-		border: none;
-		text-align: center;
-		&:hover,
-		&:focus {
-			outline: none;
-		}
-	}
-	&-disabled {
-		background-color: @color-gray7;
-	}
-	&-separator {
-		width: 10px;
-		height: 2px;
-		display: inline-block;
-		border: none;
-		background-color: @range-split-color;
-		margin: 0 8px;
-	}
-	&-popup:extend(.cloud-datepicker-popup all) {
-		width: 500px;
-
-		&-container {
-			display: flex;
-			flex-direction: row;
-			width: 500px;
-		}
 	}
 }
 

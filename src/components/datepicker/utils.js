@@ -1,24 +1,17 @@
-const monthArr = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'];
-const miniWeek = ['日', '一', '二', '三', '四', '五', '六'];
-
-function current() {
-	return new Date();
-}
-
 function getMonthSize(year, month) {
-	const now = current();
+	const now = new Date();
 	return new Date(year || now.getFullYear(), month || now.getMonth() + 1, 0).getDate();
 }
 
 function getWeekDisplayRange(year, month) {
-	const now = current();
+	const now = new Date();
 	const mm = month || now.getMonth();
 	const yy = year || now.getFullYear();
 
 	return [new Date(yy, mm - 1, 1).getDay(), new Date(yy, mm, 0).getDay()];
 }
 // 获取当前年月日时分秒对象
-function displayNow(date = current()) {
+export function displayNow(date = new Date()) {
 	const now = new Date(date);
 	const newHour = `0${now.getHours()}`;
 	const newMinute = `0${now.getMinutes()}`;
@@ -33,8 +26,8 @@ function displayNow(date = current()) {
 	};
 }
 
-function today() {
-	const now = current();
+export function today() {
+	const now = new Date();
 	return `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
 }
 // 根据年月获取对应面板的日期详情
@@ -80,13 +73,14 @@ function getMonthData(year, month) {
 	};
 }
 
-function refreshDays(year, month) {
+export function refreshDays(year, month) {
 	// eslint-disable-next-line no-shadow
 	const { prev, current, next } = getMonthData(year, month);
 	return prev.concat(current).concat(next);
 }
 // 格式转换format
-function convert(date, fmt) {
+
+export function convert(date, fmt) {
 	const { year, month, day, hour, minute, second } = date;
 	const currentDate = new Date(`${year}/${month}/${day} ${hour}:${minute}:${second}`);
 	const o = {
@@ -110,7 +104,7 @@ function convert(date, fmt) {
 	return _fmt;
 }
 
-function range(from, to) {
+export function range(from, to) {
 	let _to = null;
 	let _from = null;
 	if (to === undefined) {
@@ -125,7 +119,7 @@ function range(from, to) {
 	return arr;
 }
 
-function formatTime(param, d = '') {
+export function formatTime(param, d = '') {
 	if (param === '') {
 		return d;
 	}
@@ -135,11 +129,12 @@ function formatTime(param, d = '') {
 	return `0${param}`;
 }
 
-function transformObj(date) {
-	if (date) {
-		return displayNow(date);
-	}
-	return null;
+export function transformObj(date) {
+	return date ? displayNow(date) : null;
+}
+
+export function formatZero(value) {
+	return parseInt(value, 10) < 10 ? `0${parseInt(value, 10)}` : value;
 }
 
 const utils = {
@@ -148,8 +143,6 @@ const utils = {
 	refreshDays,
 	displayNow,
 	today,
-	monthArr,
-	miniWeek,
 	transformObj,
 	range
 };
