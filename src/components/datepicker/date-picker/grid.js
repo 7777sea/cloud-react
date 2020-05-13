@@ -56,11 +56,16 @@ class Grid extends Component {
 
 	getTodayDisabled = () => {
 		const { minDate, maxDate } = this.props;
-		const nowTimestamp = new Date().getTime();
-		if (minDate && minDate.getTime() > nowTimestamp) {
+		const { year, month, day } = displayNow();
+		const { year: minYear, month: minMonth, day: minDay } = displayNow(minDate);
+		const { year: maxYear, month: maxMonth, day: maxDay } = displayNow(maxDate);
+		const todayTimestamp = new Date(year, month, day, '00', '00', '00').getTime();
+		const minDateTimestamp = new Date(minYear, minMonth, minDay, '00', '00', '00').getTime();
+		const maxDateTimestamp = new Date(maxYear, maxMonth, maxDay, '00', '00', '00').getTime();
+		if (minDate && minDateTimestamp > todayTimestamp) {
 			return true;
 		}
-		return !!(maxDate && maxDate.getTime() < nowTimestamp);
+		return !!(maxDate && maxDateTimestamp < todayTimestamp);
 	};
 
 	getOkButtonDisabled = () => {
@@ -99,13 +104,12 @@ class Grid extends Component {
 	};
 
 	render() {
-		const { year, month, showNow, showToday, minDate, maxDate, showTimePicker, style, onPickDate } = this.props;
+		const { year, month, minDate, maxDate, showTimePicker, style, onPickDate } = this.props;
 		const { tempDay, tempHour, tempMinute, tempSecond } = this.state;
 
 		const now = displayNow();
 		const days = year && month ? refreshDays(year, month) : refreshDays(now.year, now.month);
 		const len = Math.ceil(days.length / 7);
-		const btnStyle = (!showTimePicker && showToday) || (showTimePicker && showNow) ? {} : { justifyContent: 'flex-end' };
 
 		return (
 			<div className="grid" style={style}>
@@ -134,13 +138,13 @@ class Grid extends Component {
 
 				{showTimePicker && <Time type="inner" onChange={this.onTimePickChange} value={`${tempHour}:${tempMinute}:${tempSecond}`} />}
 
-				<div className={`${selectorClass}-popup-btns`} style={btnStyle}>
-					{showToday && !showTimePicker && (
+				<div className={`${selectorClass}-popup-btns`}>
+					{!showTimePicker && (
 						<Button size="small" disabled={this.getTodayDisabled()} onClick={this.onToadyClick}>
 							今天
 						</Button>
 					)}
-					{showNow && showTimePicker && (
+					{showTimePicker && (
 						<Button size="small" onClick={this.onToadyClick}>
 							此刻
 						</Button>
@@ -165,8 +169,6 @@ Grid.propTypes = {
 	maxDate: PropTypes.instanceOf(Date),
 	minDate: PropTypes.instanceOf(Date),
 	showTimePicker: PropTypes.bool,
-	showNow: PropTypes.bool,
-	showToday: PropTypes.bool,
 	onPickDate: PropTypes.func,
 	onOK: PropTypes.func
 };
@@ -181,8 +183,6 @@ Grid.defaultProps = {
 	second: '',
 	minDate: undefined,
 	maxDate: undefined,
-	showToday: false,
-	showNow: false,
 	showTimePicker: false,
 	onPickDate: noop,
 	onOK: noop

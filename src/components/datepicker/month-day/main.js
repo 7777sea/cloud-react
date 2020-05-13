@@ -76,9 +76,15 @@ class Popup extends Component {
 			this.setState({
 				tempMonth: m
 			});
-			this.props.onChange(`${formatZero(m)}/${formatZero(value)}`);
+			this.props.onChange({
+				month: formatZero(m),
+				day: formatZero(value)
+			});
 		} else {
-			this.props.onChange(`${formatZero(this.state.tempMonth)}/${formatZero(value)}`);
+			this.props.onChange({
+				month: formatZero(this.state.tempMonth),
+				day: formatZero(value)
+			});
 		}
 	};
 
@@ -140,13 +146,11 @@ class Popup extends Component {
 }
 
 Popup.propTypes = {
-	showToday: PropTypes.bool,
 	checkValue: PropTypes.string,
 	onChange: PropTypes.func
 };
 
 Popup.defaultProps = {
-	showToday: true,
 	checkValue: '',
 	onChange: () => {}
 };
